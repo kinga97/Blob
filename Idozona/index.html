@@ -4,30 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Időzónák</title>
+    <style>
+        table, td {
+            border: 2px solid black;
+            font-family: consolas;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            padding: 5px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 </head>
 <body>
-    <div id="tabla"></div>
+    <!--<div id="tabla"></div>-->
+    <canvas id="chart" width="800" height="400"></canvas>
     <script>
+        chartIt();
+        async function chartIt() {
+            const data = await getData();
+            const ctx = document.getElementById('chart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.xs,
+                    datasets: [{
+                        label: 'Combined Land-Surface Air and Sea-Surface Water Temperature in C°',
+                        data: data.ys,
+                        fill: false,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Northern Hemisphere-mean monthly, seasonal, and annual means in C°',
+                        data: data.ynorth,
+                        fill: false,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Southern Hemisphere-mean monthly, seasonal, and annual means in C°',
+                        data: data.ysouth,
+                        fill: false,
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + '°';
+                                }
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
         async function getData() {
             const leker = await fetch('./idozona.csv');
             const adatok = await leker.text();
-            console.log(adatok);
+           // console.log(adatok);
+            const rows = adatok.trim().split('\n');
 
-            const tabla = adatok.split('\n').slice(1);
-            let tabla = '<table>';
+            const xs = [];
+            const ys = [];
+            const ynorth = [];
+            const ysouth = [];
             rows.forEach(row => {
-                let sor = sor.split(',');
-                tabla += '<tr>';
-                const ev = oszlopok[0];
-                const ido = oszlopok[1];
-                console.log(ev, ido);
+                const oszlop = row.split(',');
+                const year = oszlop[0];
+                xs.push(year);
+                const temp = oszlop[1];
+                ys.push(parseFloat(temp) + 14);
+                const nhem = oszlop[2];
+                ynorth.push(parseFloat(nhem) + 14);
+                const shem = oszlop[3];
+                ysouth.push(parseFloat(shem) + 14);
+                console.log(year, temp, nhem, shem);
+            });
 
-                
+            return { xs, ys, ynorth, ysouth };
+           
+            /*let tabla = '<table>'; 
+            rows.forEach(row => {
+                // console.log(row);
+                let sor = row.split(',');
+                tabla += `<tr>`;
+                for (let i = 0; i < sor.length; i++) {
+                    tabla += `<td>${sor[i]}</td>`;
+                }
+                tabla += `</tr>`; 
+            });
+        
+            tabla += '</table>';
 
-               
-            })
+            document.getElementById('tabla').innerHTML = tabla;*/
         }
-        getData();
+        
 
       
     </script>
